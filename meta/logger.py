@@ -27,10 +27,12 @@ class Logger:
 
         self.logger = logger
         self.logger.setLevel(level=base_level)
-        self.file_handler = logging.FileHandler(filename=self._file_path)
-        self.formatter = logging.Formatter(_format)
-        self.file_handler.setFormatter(self.formatter)
-        self.logger.addHandler(self.file_handler)
+
+        if filename:
+            self.file_handler = logging.FileHandler(filename=self._file_path)
+            self.formatter = logging.Formatter(_format)
+            self.file_handler.setFormatter(self.formatter)
+            self.logger.addHandler(self.file_handler)
 
     def log(self, level: int, message: str) -> None:
         self.logger.log(level=level, msg=message)
