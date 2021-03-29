@@ -5,7 +5,9 @@
 __pycache__
 
 # task me up
+/temp
 *.log
+.env
 test.py
 test2.py
 db.json
