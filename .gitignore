@@ -6,3 +6,6 @@ __pycache__
 
 # task me up
 *.log
+test.py
+test2.py
+db.json
