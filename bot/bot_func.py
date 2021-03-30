@@ -39,7 +39,7 @@ def parse_text(
             )
             bot.send_message(_id, text="Enter the task description")
 
-        elif text == "removetask":
+        elif text == "removetasks":
             cmd_handler.set_user_command(
                 user_id=_id,
                 cmd=UserCmd(
@@ -47,6 +47,7 @@ def parse_text(
                     cmd=UserCommands.REMOVETASK,
                 ),
             )
+            bot.send_message(_id, text="Enter the Task ID of the task to remove..")
 
         elif text == "viewtasks":
             cmd_handler.set_user_command(
@@ -64,26 +65,35 @@ def parse_text(
                     bot.send_message(_id, text=str(task))
 
         else:
-            if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDESC:
-                task_handler.add_task(_id, task_desc=data.text)
-                bot.send_message(_id, text="Enter the date")
-                cmd_handler.set_user_command(
-                    _id,
-                    cmd=UserCmd(
-                        time_inserted=int(time.time()), cmd=UserCommands.TASKDATE
-                    ),
-                )
-
-            if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDATE:
-                # validating date
-                try:
-                    d_obj = datetime.strptime(user_q_data.text, "%d-%m-%Y")
-                    date = datetime.strftime(d_obj, "%d-%m-%Y")
-                    task_handler.add_date(_id, date)
-                    task = task_handler.get_task(_id)
-                    user = User(
-                        username=user_q_data.username, user_id=_id, tasks=[task]
+            if cmd_handler.get_user_command(_id):
+                if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDESC:
+                    task_handler.add_task(_id, task_desc=data.text)
+                    bot.send_message(_id, text="Enter the date")
+                    cmd_handler.set_user_command(
+                        _id,
+                        cmd=UserCmd(
+                            time_inserted=int(time.time()), cmd=UserCommands.TASKDATE
+                        ),
                     )
-                    db.add_task(user)
-                except ValueError:
-                    bot.send_message(_id, f"Date should be of the form DD-MM-YYYY")
+
+                if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDATE:
+                    # validating date
+                    try:
+                        d_obj = datetime.strptime(user_q_data.text, "%d-%m-%Y")
+                        # date = datetime.strftime(d_obj, "%d-%m-%Y")
+                        del d_obj
+                        task_handler.add_date(_id, user_q_data.text)
+                        task = task_handler.get_task(_id)
+                        user = User(
+                            username=user_q_data.username, user_id=_id, tasks=[task]
+                        )
+                        db.add_task(user)
+                    except ValueError:
+                        bot.send_message(_id, f"Date should be of the form DD-MM-YYYY")
+
+                if cmd_handler.get_user_command(_id).cmd == UserCommands.REMOVETASK:
+                    try:
+                        db.delete_user_tasks(_id, task_id=int(data.text))
+                        bot.send_message(_id, text="Task removed successfully..")
+                    except ValueError:
+                        bot.send_message(_id, text="Task ID must be a number..")

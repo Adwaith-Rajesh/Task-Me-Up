@@ -20,7 +20,7 @@ class Task:
     task_date: str
 
     def __str__(self) -> str:
-        return f"Task ID: {self.task_id}\nTask Desc: {self.task_desc}\nTask Date{self.task_date}"
+        return f"Task ID: {self.task_id}\nTask Desc: {self.task_desc}\nTask Date: {self.task_date}"
 
 
 @dataclass

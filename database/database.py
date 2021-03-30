@@ -5,6 +5,7 @@ from pprint import pprint
 
 from pysondb import db
 from rich import print
+from rich.logging import RichHandler
 
 from meta.logger import Logger, logging
 from meta.user import User, Task
@@ -16,7 +17,8 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db.json")
 
 # stop imported loggers
 logging.getLogger("pysondb").setLevel(logging.WARNING)
-logging.getLogger("filelock").setLevel(logging.WARNING)
+# logging.getLogger("filelock").setLevel(logging.WARNING)
+logging.getLogger("filelock").addHandler(RichHandler())
 
 # db loggers
 db_log = logging.getLogger("database")
@@ -56,7 +58,8 @@ class Database:
             # print("appended", db_data)
 
             # update the DB
-            self._db.updateById(self.get_db_id(user.user_id), db_data[0])
+            # self._db.updateById(self.get_db_id(user.user_id), db_data[0])
+            self._db.update({"user_id": user.user_id}, db_data[0])
 
     def delete_user_tasks(self, user_id: int, task_id: int) -> bool:
 
@@ -78,7 +81,7 @@ class Database:
         user_data[0]["tasks"] = users_tasks
 
         # update the DB
-        self._db.updateById(_id, user_data[0])
+        self._db.update({"user_id": user_id}, user_data[0])
         db_logger.log(
             logging.INFO,
             message=f"delete_user_task: User {user_id=} removed successfully",
@@ -121,7 +124,7 @@ class Database:
         for task in json["tasks"]:
             user.tasks.append(
                 Task(
-                    task=task["task"],
+                    task_desc=task["task"],
                     task_id=task["task_id"],
                     task_date=task["task_date"],
                 )

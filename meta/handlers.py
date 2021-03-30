@@ -57,6 +57,7 @@ class UserCommandHandler:
             if c_time - self._c_dict[user_id].time_inserted >= time_limit_s:
                 user_id_to_remove.append(user_id)
                 del self._c_dict[user_id]
+        ch_logger.log(logging.INFO, message=f"Users to remove {user_id_to_remove=}")
 
         return user_id_to_remove
 
