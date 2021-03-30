@@ -12,7 +12,8 @@ from rich import print, pretty
 from meta.logger import Logger, logging
 
 from meta.user import UserQueueData
-from meta.handlers import UserCommandHandler, UserQueueHandler
+from meta.handlers import UserCommandHandler, UserQueueHandler, UserTaskHandler
+from .bot_func import parse_text
 from .keyboards import main_keyboard
 
 pretty.install()
@@ -31,7 +32,7 @@ bot_logger = Logger(b_l, base_level=logging.DEBUG, filename="bot.log")
 # handlers
 user_q_handler = UserQueueHandler()
 user_cmd_handler = UserCommandHandler()
-
+user_task_handler = UserTaskHandler()
 
 bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"))
 
@@ -65,6 +66,12 @@ def handle_all_the_msgs(msg):
 def get_q_users():
     # logging.debug(msg="In get_q_users")
     user = user_q_handler.get_user()
+    parse_text(
+        bot=bot,
+        user_q_data=user,
+        cmd_handler=user_cmd_handler,
+        task_handler=user_task_handler,
+    )
 
 
 def pol():
@@ -81,7 +88,7 @@ def start_bot():
 
     def _sched():
         bot_logger.log(logging.DEBUG, message="Starting scheduler")
-        schedule.every(1).seconds.do(get_q_users)
+        schedule.every(0.5).seconds.do(get_q_users)
         # get_q_users()
 
     pol_t = threading.Thread(target=_pol, daemon=True)

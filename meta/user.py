@@ -19,6 +19,9 @@ class Task:
     task_desc: str
     task_date: str
 
+    def __str__(self) -> str:
+        return f"Task ID: {self.task_id}\nTask Desc: {self.task_desc}\nTask Date{self.task_date}"
+
 
 @dataclass
 class UserQueueData:
@@ -42,7 +45,6 @@ class NonUserInfo:
 class UserCmd:
     """The current state of the user / or the current command the user is tryign to run"""
 
-    user_id: int
     time_inserted: int
     cmd: UserCommands
 
@@ -52,6 +54,6 @@ class UserCommands(Enum):
     NEWTASK = 1
     TASKDESC = 2
     TASKDATE = 3
-    DELETETASK = 4
+    REMOVETASK = 4
     VIEWALLTASKS = 5
     TIMEOUT = 10

@@ -5,7 +5,6 @@ def main_keyboard():
 
     btn_text = ["New Task", "View Tasks", "Remove Tasks"]
     markup = types.ReplyKeyboardMarkup(row_width=2)
-    for name in btn_text:
-        markup.add(types.KeyboardButton(text=name))
-
+    markup.add(*[types.KeyboardButton(i) for i in btn_text])
+    # markup.row_width = 2
     return markup
