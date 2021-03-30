@@ -49,6 +49,12 @@ class UserCmd:
     cmd: UserCommands
 
 
+@dataclass
+class TodaysTasks:
+    user_id: int
+    tasks: List[Task]
+
+
 class UserCommands(Enum):
 
     NEWTASK = 1
@@ -56,4 +62,5 @@ class UserCommands(Enum):
     TASKDATE = 3
     REMOVETASK = 4
     VIEWALLTASKS = 5
+    TASKDONE = 6
     TIMEOUT = 10

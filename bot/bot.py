@@ -11,9 +11,9 @@ from rich import print, pretty
 
 from meta.logger import Logger, logging
 
-from meta.user import UserQueueData
+from meta.user import UserQueueData, UserCommands
 from meta.handlers import UserCommandHandler, UserQueueHandler, UserTaskHandler
-from .bot_func import parse_text
+from .bot_func import parse_text, send_cmd_time_out, todays_tasks_func
 from .keyboards import main_keyboard
 
 pretty.install()
@@ -34,7 +34,7 @@ user_q_handler = UserQueueHandler()
 user_cmd_handler = UserCommandHandler()
 user_task_handler = UserTaskHandler()
 
-bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"))
+bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"), num_threads=2)
 
 
 @bot.message_handler(commands=["start"])
@@ -74,6 +74,19 @@ def get_q_users():
     )
 
 
+def clean_q():
+    bot_logger.log(logging.INFO, message="Cleaning Q")
+    users = user_cmd_handler.remove_old_commands(time_limit_s=20)
+    user_task_handler.remove_user([user_id[0] for user_id in users])
+    send_cmd_time_out(
+        bot, [user_id[0] for user_id in users if user_id[1] != UserCommands.TASKDONE]
+    )
+
+
+def todays_tasks():
+    todays_tasks_func(bot, bot_logger=bot_logger)
+
+
 def pol():
     bot_logger.log(logging.DEBUG, message="Starting Poll")
     while True:
@@ -89,6 +102,8 @@ def start_bot():
     def _sched():
         bot_logger.log(logging.DEBUG, message="Starting scheduler")
         schedule.every(0.5).seconds.do(get_q_users)
+        schedule.every(20).seconds.do(clean_q)
+        schedule.every(1).minute.do(todays_tasks)
         # get_q_users()
 
     pol_t = threading.Thread(target=_pol, daemon=True)

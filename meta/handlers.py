@@ -55,8 +55,10 @@ class UserCommandHandler:
         user_id_to_remove = []
         for user_id in self._c_dict:
             if c_time - self._c_dict[user_id].time_inserted >= time_limit_s:
-                user_id_to_remove.append(user_id)
-                del self._c_dict[user_id]
+                user_id_to_remove.append([user_id, self._c_dict[user_id].cmd])
+
+        for user in user_id_to_remove:
+            del self._c_dict[user[0]]
         ch_logger.log(logging.INFO, message=f"Users to remove {user_id_to_remove=}")
 
         return user_id_to_remove

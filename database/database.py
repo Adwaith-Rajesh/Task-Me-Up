@@ -1,5 +1,6 @@
 import os
-from typing import Union, Dict
+from typing import Union, Dict, List
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint
 
@@ -8,7 +9,7 @@ from rich import print
 from rich.logging import RichHandler
 
 from meta.logger import Logger, logging
-from meta.user import User, Task
+from meta.user import User, Task, TodaysTasks
 
 
 DictType = Dict[str, Union[str, int, Dict[str, Union[int, str]]]]
@@ -101,6 +102,29 @@ class Database:
     def get_db_id(self, user_id: int) -> int:
         if self.check_user_exists(user_id):
             return self._db.getBy({"user_id": user_id})[0]["id"]
+
+    def get_todays_tasks(self, user_id: int = 0) -> List[TodaysTasks]:
+        t_date = datetime.today().strftime("%d-%m-%Y")
+        tasks_for_today: List[TodaysTasks] = []
+        if not user_id:
+            data = list(map(self.convert_json_to_user_object, self._db.getAll()))
+        else:
+            data = list(
+                map(
+                    self.convert_json_to_user_object,
+                    self._db.getBy({"user_id": user_id}),
+                )
+            )
+        for user in data:
+            t_task = TodaysTasks(user.user_id, [])
+            for task in user.tasks:
+                if task.task_date == t_date:
+                    t_task.tasks.append(task)
+
+            if t_task.tasks:
+                tasks_for_today.append(t_task)
+
+        return tasks_for_today
 
     def convert_user_to_json(self, user: User) -> DictType:
         default_json = {"username": user.username, "user_id": user.user_id, "tasks": []}
