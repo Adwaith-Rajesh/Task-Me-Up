@@ -94,6 +94,7 @@ def clean_q():
                 UserCommands.TASKDONE,
                 UserCommands.VIEWALLTASKS,
                 UserCommands.REMOVETASK,
+                UserCommands.CLEARHISTORY,
             )
         ],
     )

@@ -63,4 +63,5 @@ class UserCommands(Enum):
     REMOVETASK = 4
     VIEWALLTASKS = 5
     TASKDONE = 6
+    CLEARHISTORY = 7
     TIMEOUT = 10

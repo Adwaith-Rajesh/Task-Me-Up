@@ -24,6 +24,11 @@ def send_msg(bot: telebot.TeleBot, user_id: int, message: str) -> None:
     msg_id_db.add_msg_id(user_id, rv.message_id)
 
 
+def delete_msgs(bot: telebot.TeleBot, user_id: int, msg_ids: List[int]) -> None:
+    for msg_id in msg_ids:
+        bot.delete_message(user_id, message_id=msg_id)
+
+
 def parse_text(
     bot: TeleBot,
     user_q_data: UserQueueData,
@@ -71,6 +76,18 @@ def parse_text(
                 tasks = tasks.tasks
                 for task in tasks:
                     send_msg(bot, _id, message=str(task))
+
+        elif text == "clearhistory":
+            cmd_handler.set_user_command(
+                user_id=_id,
+                cmd=UserCmd(
+                    time_inserted=int(time.time()),
+                    cmd=UserCommands.CLEARHISTORY,
+                ),
+            )
+            msg_ids = msg_id_db.get_msg_id(_id)
+            delete_msgs(bot, _id, msg_ids)
+            msg_id_db.remove_msg_id(_id)
 
         else:
             if cmd_handler.get_user_command(_id):
