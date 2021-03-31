@@ -80,6 +80,8 @@ def parse_text(
                     send_msg(bot, _id, message="You don't have any tasks.")
                 for task in tasks:
                     send_msg(bot, _id, message=str(task))
+            else:
+                send_msg(bot, _id, message="You don't have any tasks.")
 
         elif text == "clearhistory":
             set_cmd_handler(_id, cmd_handler, UserCommands.CLEARHISTORY)
