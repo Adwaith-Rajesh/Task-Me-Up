@@ -14,7 +14,7 @@ from meta.logger import Logger, logging
 from meta.user import UserQueueData, UserCommands
 from meta.handlers import UserCommandHandler, UserQueueHandler, UserTaskHandler
 from database.message_id import MessageID
-from .bot_func import parse_text, send_cmd_time_out, todays_tasks_func
+from .bot_func import parse_text, send_cmd_time_out, todays_tasks_func, his_delete
 from .keyboards import main_keyboard
 
 pretty.install()
@@ -104,6 +104,10 @@ def todays_tasks():
     todays_tasks_func(bot, bot_logger=bot_logger)
 
 
+def delete_history():
+    his_delete(bot)
+
+
 def pol():
     bot_logger.log(logging.DEBUG, message="Starting Poll")
     while True:
@@ -120,7 +124,8 @@ def start_bot():
         bot_logger.log(logging.DEBUG, message="Starting scheduler")
         schedule.every(0.5).seconds.do(get_q_users)
         schedule.every(20).seconds.do(clean_q)
-        schedule.every(1).minute.do(todays_tasks)
+        schedule.every().day.at("01:00").do(todays_tasks)
+        schedule.every(1).hour.do(delete_history)
         # get_q_users()
 
     pol_t = threading.Thread(target=_pol, daemon=True)

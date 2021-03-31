@@ -19,6 +19,16 @@ db = Database()
 msg_id_db = MessageID()
 
 
+def set_cmd_handler(_id, cmd_handler: UserCommandHandler, cmd: UserCommands):
+    cmd_handler.set_user_command(
+        user_id=_id,
+        cmd=UserCmd(
+            time_inserted=int(time.time()),
+            cmd=cmd,
+        ),
+    )
+
+
 def send_msg(bot: telebot.TeleBot, user_id: int, message: str) -> None:
     rv = bot.send_message(user_id, text=message)
     msg_id_db.add_msg_id(user_id, rv.message_id)
@@ -27,6 +37,14 @@ def send_msg(bot: telebot.TeleBot, user_id: int, message: str) -> None:
 def delete_msgs(bot: telebot.TeleBot, user_id: int, msg_ids: List[int]) -> None:
     for msg_id in msg_ids:
         bot.delete_message(user_id, message_id=msg_id)
+
+
+def his_delete(bot: telebot.TeleBot):
+    user_ids = db.get_users()
+    for _id in user_ids:
+        msg_ids = msg_id_db.get_msg_id(_id)
+        delete_msgs(bot, _id, msg_ids)
+        msg_id_db.remove_msg_id(_id)
 
 
 def parse_text(
@@ -43,34 +61,15 @@ def parse_text(
         text = data.text.lower().replace(" ", "")
         bf_logger.log(logging.DEBUG, message=f"Got {text} from {data.user_id}")
         if text == "newtask":
-            cmd_handler.set_user_command(
-                user_id=_id,
-                cmd=UserCmd(
-                    time_inserted=int(time.time()),
-                    cmd=UserCommands.TASKDESC,
-                ),
-            )
+            set_cmd_handler(_id, cmd_handler, UserCommands.NEWTASK)
             send_msg(bot, _id, message="Enter the task description")
 
         elif text == "removetasks":
-            cmd_handler.set_user_command(
-                user_id=_id,
-                cmd=UserCmd(
-                    time_inserted=int(time.time()),
-                    cmd=UserCommands.REMOVETASK,
-                ),
-            )
+            set_cmd_handler(_id, cmd_handler, UserCommands.REMOVETASK)
             send_msg(bot, _id, message="Enter the Task ID of the task to remove..")
 
         elif text == "viewtasks":
-            cmd_handler.set_user_command(
-                user_id=_id,
-                cmd=UserCmd(
-                    time_inserted=int(time.time()),
-                    cmd=UserCommands.VIEWALLTASKS,
-                ),
-            )
-
+            set_cmd_handler(_id, cmd_handler, UserCommands.VIEWALLTASKS)
             tasks = db.get_all_tasks(_id)
             if tasks:
                 tasks = tasks.tasks
@@ -78,13 +77,7 @@ def parse_text(
                     send_msg(bot, _id, message=str(task))
 
         elif text == "clearhistory":
-            cmd_handler.set_user_command(
-                user_id=_id,
-                cmd=UserCmd(
-                    time_inserted=int(time.time()),
-                    cmd=UserCommands.CLEARHISTORY,
-                ),
-            )
+            set_cmd_handler(_id, cmd_handler, UserCommands.CLEARHISTORY)
             msg_ids = msg_id_db.get_msg_id(_id)
             delete_msgs(bot, _id, msg_ids)
             msg_id_db.remove_msg_id(_id)
@@ -94,12 +87,7 @@ def parse_text(
                 if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDESC:
                     task_handler.add_task(_id, task_desc=data.text)
                     send_msg(bot, _id, message="Enter the date")
-                    cmd_handler.set_user_command(
-                        _id,
-                        cmd=UserCmd(
-                            time_inserted=int(time.time()), cmd=UserCommands.TASKDATE
-                        ),
-                    )
+                    set_cmd_handler(_id, cmd_handler, UserCommands.TASKDATE)
 
                 if cmd_handler.get_user_command(_id).cmd == UserCommands.TASKDATE:
                     time_e = cmd_handler.get_user_command(_id).time_inserted
@@ -115,10 +103,7 @@ def parse_text(
                         )
                         db.add_task(user)
                         send_msg(bot, _id, message="Task added successfully")
-                        cmd_handler.set_user_command(
-                            _id,
-                            UserCmd(time_inserted=time_e, cmd=UserCommands.TASKDONE),
-                        )
+                        set_cmd_handler(_id, cmd_handler, UserCommands.TASKDONE)
                     except ValueError:
                         send_msg(
                             bot, _id, message="Date should be of the form DD-MM-YYYY"

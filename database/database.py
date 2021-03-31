@@ -18,7 +18,7 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db.json")
 
 # stop imported loggers
 logging.getLogger("pysondb").setLevel(logging.WARNING)
-# logging.getLogger("filelock").setLevel(logging.WARNING)
+logging.getLogger("filelock").setLevel(logging.WARNING)
 logging.getLogger("filelock").addHandler(RichHandler())
 
 # db loggers
@@ -125,6 +125,11 @@ class Database:
                 tasks_for_today.append(t_task)
 
         return tasks_for_today
+
+    def get_users(self) -> List[int]:
+        data = self._db.getAll()
+        data = [i["user_id"] for i in data]
+        return data
 
     def convert_user_to_json(self, user: User) -> DictType:
         default_json = {"username": user.username, "user_id": user.user_id, "tasks": []}

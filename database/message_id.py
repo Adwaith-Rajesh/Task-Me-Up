@@ -10,7 +10,7 @@ from rich.logging import RichHandler
 
 # stop imported loggers
 logging.getLogger("pysondb").setLevel(logging.WARNING)
-# logging.getLogger("filelock").setLevel(logging.WARNING)
+logging.getLogger("filelock").setLevel(logging.WARNING)
 logging.getLogger("filelock").addHandler(RichHandler())
 
 # db loggers
@@ -53,13 +53,14 @@ class MessageID:
             return []
 
     def remove_msg_id(self, user_id: int) -> None:
-        data = self._db.getBy({"user_id": user_id})[0]
-        data["msg_ids"].clear()
-        self._db.update({"user_id": user_id}, data)
-        ms_logger.log(
-            logging.INFO,
-            message=f"remove_msg_id message ids remove successfully {user_id=}",
-        )
+        if self.check_user_id_exists(user_id):
+            data = self._db.getBy({"user_id": user_id})[0]
+            data["msg_ids"].clear()
+            self._db.update({"user_id": user_id}, data)
+            ms_logger.log(
+                logging.INFO,
+                message=f"remove_msg_id message ids remove successfully {user_id=}",
+            )
 
     def check_user_id_exists(self, user_id: int) -> bool:
         if self._db.getBy({"user_id": user_id}):
