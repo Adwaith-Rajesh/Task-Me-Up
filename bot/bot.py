@@ -13,6 +13,7 @@ from meta.logger import Logger, logging
 
 from meta.user import UserQueueData, UserCommands
 from meta.handlers import UserCommandHandler, UserQueueHandler, UserTaskHandler
+from database.message_id import MessageID
 from .bot_func import parse_text, send_cmd_time_out, todays_tasks_func
 from .keyboards import main_keyboard
 
@@ -29,10 +30,14 @@ logging.getLogger("schedule").setLevel(logging.WARNING)
 b_l = logging.getLogger("bot")
 bot_logger = Logger(b_l, base_level=logging.DEBUG, filename="bot.log")
 
+t_log = logging.getLogger("bot_text")
+t_logger = Logger(t_log, base_level=logging.DEBUG, filename="")
+
 # handlers
 user_q_handler = UserQueueHandler()
 user_cmd_handler = UserCommandHandler()
 user_task_handler = UserTaskHandler()
+messsage_id = MessageID()
 
 bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"), num_threads=2)
 
@@ -58,6 +63,7 @@ def handle_all_the_msgs(msg):
         text=msg.text,
     )
 
+    messsage_id.add_msg_id(user_id=msg.from_user.id, msg_id=msg.message_id)
     # add the user q data to the Q handler
     user_q_handler.add_user(user)
 
@@ -75,11 +81,21 @@ def get_q_users():
 
 
 def clean_q():
-    bot_logger.log(logging.INFO, message="Cleaning Q")
+    t_logger.log(logging.INFO, message="Cleaning Q")
     users = user_cmd_handler.remove_old_commands(time_limit_s=20)
     user_task_handler.remove_user([user_id[0] for user_id in users])
     send_cmd_time_out(
-        bot, [user_id[0] for user_id in users if user_id[1] != UserCommands.TASKDONE]
+        bot,
+        [
+            user_id[0]
+            for user_id in users
+            if user_id[1]
+            not in (
+                UserCommands.TASKDONE,
+                UserCommands.VIEWALLTASKS,
+                UserCommands.REMOVETASK,
+            )
+        ],
     )
 
 

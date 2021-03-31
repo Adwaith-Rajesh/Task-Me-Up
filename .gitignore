@@ -11,3 +11,4 @@ __pycache__
 test.py
 test2.py
 db.json
+msg_id.json
