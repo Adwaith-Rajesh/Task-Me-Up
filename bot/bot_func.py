@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from typing import List
+from time import sleep
 
 from telebot import TeleBot
 import telebot
@@ -45,6 +46,7 @@ def his_delete(bot: telebot.TeleBot):
         msg_ids = msg_id_db.get_msg_id(_id)
         delete_msgs(bot, _id, msg_ids)
         msg_id_db.remove_msg_id(_id)
+        sleep(0.5)
 
 
 def parse_text(
@@ -63,6 +65,7 @@ def parse_text(
         if text == "newtask":
             set_cmd_handler(_id, cmd_handler, UserCommands.NEWTASK)
             send_msg(bot, _id, message="Enter the task description")
+            set_cmd_handler(_id, cmd_handler, UserCommands.TASKDESC)
 
         elif text == "removetasks":
             set_cmd_handler(_id, cmd_handler, UserCommands.REMOVETASK)
@@ -73,6 +76,8 @@ def parse_text(
             tasks = db.get_all_tasks(_id)
             if tasks:
                 tasks = tasks.tasks
+                if not tasks:
+                    send_msg(bot, _id, message="You don't have any tasks.")
                 for task in tasks:
                     send_msg(bot, _id, message=str(task))
 

@@ -28,7 +28,7 @@ logging.getLogger("schedule").setLevel(logging.WARNING)
 
 # loggers
 b_l = logging.getLogger("bot")
-bot_logger = Logger(b_l, base_level=logging.DEBUG, filename="bot.log")
+bot_logger = Logger(b_l, base_level=logging.INFO, filename="bot.log")
 
 t_log = logging.getLogger("bot_text")
 t_logger = Logger(t_log, base_level=logging.DEBUG, filename="")
@@ -39,7 +39,7 @@ user_cmd_handler = UserCommandHandler()
 user_task_handler = UserTaskHandler()
 messsage_id = MessageID()
 
-bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"), num_threads=2)
+bot = TeleBot(token=os.environ.get("BOT_API_TOKEN_TEST"), threaded=True, num_threads=10)
 
 
 @bot.message_handler(commands=["start"])
@@ -81,7 +81,7 @@ def get_q_users():
 
 
 def clean_q():
-    t_logger.log(logging.INFO, message="Cleaning Q")
+    t_logger.log(logging.DEBUG, message="Cleaning Q")
     users = user_cmd_handler.remove_old_commands(time_limit_s=20)
     user_task_handler.remove_user([user_id[0] for user_id in users])
     send_cmd_time_out(
@@ -105,7 +105,12 @@ def todays_tasks():
 
 
 def delete_history():
-    his_delete(bot)
+    def _delete_history():
+        his_delete(bot)
+
+    # t = threading.Thread(target=_delete_history)
+    # t.start()
+    _delete_history()
 
 
 def pol():
@@ -121,11 +126,16 @@ def start_bot():
         pol()
 
     def _sched():
+        def run_threaded(job_func):
+            job_thread = threading.Thread(target=job_func)
+            job_thread.start()
+
         bot_logger.log(logging.DEBUG, message="Starting scheduler")
-        schedule.every(0.5).seconds.do(get_q_users)
-        schedule.every(20).seconds.do(clean_q)
-        schedule.every().day.at("01:00").do(todays_tasks)
-        schedule.every(1).hour.do(delete_history)
+        schedule.every(0.5).seconds.do(run_threaded, get_q_users)
+        schedule.every(20).seconds.do(run_threaded, clean_q)
+        schedule.every().day.at("01:00").do(run_threaded, todays_tasks)
+        schedule.every(1).hour.do(run_threaded, delete_history)
+        schedule.every()
         # get_q_users()
 
     pol_t = threading.Thread(target=_pol, daemon=True)
